@@ -32,31 +32,65 @@ const Checkout = () => {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      for (const item of cart) {
-        await orderService.createOrder({
-          productId: item._id || item.id || null,
-          designId: item.id || new Date().getTime(),
-          quantity: item.quantity,
-          fabric: item.fabric,
-          color: item.color,
-          size: item.size,
-          fit: item.fit,
-          shippingAddress: checkout.shippingAddress,
-        });
-      }
-
-      alert('Order placed successfully! Thank you for your purchase.');
-      clearCart();
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Error placing order:', error);
-      alert('There was an error placing your order. Please try again.');
-    } finally {
-      setLoading(false);
+    const outOfStockItems = cart.filter(item => item.stock <= 0);
+    if (outOfStockItems.length > 0) {
+      alert(`Cannot place order. Out of stock: ${outOfStockItems.map(i => i.name).join(', ')}`);
+      return;
     }
+
+    // =========================================================
+    // 👇 PASTE YOUR RAZORPAY TEST KEY ID HERE 👇
+    // =========================================================
+    const MY_TEST_KEY_ID = "rzp_test_SZ00ZKyveoJB7z";
+    const amountInPaise = getTotalPrice() * 100;
+
+    const options = {
+      key: MY_TEST_KEY_ID,
+      amount: amountInPaise.toString(),
+      currency: "INR",
+      name: "TeeStitch Store",
+      description: "Test Payment",
+      handler: async (response) => {
+        console.log("✅ Payment Successful!");
+        console.log("Payment ID:", response.razorpay_payment_id);
+
+        setLoading(true);
+        try {
+          for (const item of cart) {
+            await orderService.createOrder({
+              productId: item._id || item.id || null,
+              designId: item.id || new Date().getTime(),
+              quantity: item.quantity,
+              fabric: item.fabric,
+              color: item.color,
+              size: item.size,
+              fit: item.fit,
+              shippingAddress: checkout.shippingAddress,
+            });
+          }
+
+          alert(`Payment Successful! Order placed.\nPayment ID: ${response.razorpay_payment_id}`);
+          clearCart();
+          navigate('/dashboard');
+        } catch (error) {
+          console.error('Error placing order:', error);
+          alert('Payment was successful but there was an error saving your order. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      },
+      theme: { color: "#3399cc" }
+    };
+
+    const rzp1 = new window.Razorpay(options);
+
+    rzp1.on('payment.failed', function (response) {
+      console.error("❌ Payment Failed!");
+      console.error("Error Description:", response.error.description);
+      alert(`Payment Failed!\nReason: ${response.error.description}`);
+    });
+
+    rzp1.open();
   };
 
   if (cart.length === 0) {
@@ -176,9 +210,12 @@ const Checkout = () => {
               <span>₹{getTotalPrice()}</span>
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg mb-6">
-              <p className="text-sm text-gray-600">
-                <strong>Note:</strong> Payment processing is disabled for this demo. Your order will be marked as pending.
+            <div className="bg-green-50 p-4 rounded-lg mb-6 border border-green-200">
+              <p className="text-sm font-semibold text-green-700 flex items-center gap-2 mb-1">
+                🔒 Secure Payment (Simulated using Razorpay Test Mode)
+              </p>
+              <p className="text-sm text-green-600">
+                You will be safely redirected. Please use test payment details.
               </p>
             </div>
 
@@ -187,7 +224,7 @@ const Checkout = () => {
               disabled={loading}
               className="btn-primary w-full disabled:opacity-50 py-3"
             >
-              {loading ? 'Processing...' : 'Place Order (Demo)'}
+              {loading ? 'Processing...' : 'Pay Now'}
             </button>
           </div>
         </div>

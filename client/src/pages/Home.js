@@ -20,7 +20,8 @@ const Home = () => {
         const res = await productService.getProducts();
         setProducts(res.data);
       } catch (err) {
-        setError('Unable to load products. Please refresh.');
+        console.error("API Error:", err);
+        setError('Server waking up, please wait... (If the issue persists, refresh the page)');
       } finally {
         setLoading(false);
       }
@@ -49,7 +50,12 @@ const Home = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading products...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen flex-col">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-4"></div>
+        <p className="text-xl text-gray-600 font-semibold">Server waking up, please wait...</p>
+      </div>
+    );
   }
 
   return (
@@ -67,7 +73,7 @@ const Home = () => {
               )}
             </div>
             <div className="hidden lg:block">
-              <img src="https://via.placeholder.com/600x300?text=TeeStitch+Banner" alt="banner" className="rounded-lg" />
+              <img src="https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg" alt="banner" className="rounded-lg w-full h-[300px] object-cover" />
             </div>
           </div>
         </div>

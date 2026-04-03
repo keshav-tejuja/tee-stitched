@@ -24,6 +24,18 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Input Validation
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('Input cannot be empty');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Invalid email format');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -45,8 +57,11 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="card w-full max-w-md p-8">
-        <h1 className="text-3xl font-bold text-center mb-6 text-primary">Login</h1>
-        
+        <h1 className="text-3xl font-bold text-center mb-2 text-primary">Login</h1>
+        <div className="text-center text-sm font-semibold text-green-600 mb-6 flex justify-center items-center gap-1">
+          🔒 Secure Login
+        </div>
+
         {error && (
           <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
             {error}
