@@ -10,7 +10,7 @@ const {
 
 router.post('/', authMiddleware, createOrder);
 router.get('/', authMiddleware, getUserOrders);
-router.get('/admin/all', getAllOrders);
-router.patch('/:id/status', updateOrderStatus);
+router.get('/admin/all', authMiddleware, adminMiddleware, getAllOrders);
+router.patch('/:id/status', authMiddleware, adminMiddleware, updateOrderStatus);
 
 module.exports = router;

@@ -6,7 +6,7 @@ const {
   getCustomerInsights,
 } = require('../controllers/analyticsController');
 
-router.get('/demand', getDemandAnalytics);
-router.get('/customers', getCustomerInsights);
+router.get('/demand', authMiddleware, adminMiddleware, getDemandAnalytics);
+router.get('/customers', authMiddleware, adminMiddleware, getCustomerInsights);
 
 module.exports = router;

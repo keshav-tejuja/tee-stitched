@@ -16,7 +16,7 @@ const products = [
     name: 'Stitched Classic Tee',
     category: 'Men',
     basePrice: 499,
-    image: 'https://via.placeholder.com/350x420?text=Classic+Tee',
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Pure cotton tee with reinforced stitches and soft feel.',
     fabrics: ['cotton', 'cotton-blend'],
     colors: ['black', 'white', 'navy', 'gray'],
@@ -41,7 +41,7 @@ const products = [
     name: 'Stitched Streetwear Hoodie',
     category: 'Men',
     basePrice: 899,
-    image: 'https://via.placeholder.com/350x420?text=Streetwear+Hoodie',
+    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Cozy cotton blend hoodie with hood drawstrings and kangaroo pocket.',
     fabrics: ['cotton', 'polyester'],
     colors: ['black', 'maroon', 'blue', 'olive'],
@@ -66,7 +66,7 @@ const products = [
     name: 'Stitched Slim Fit Top',
     category: 'Women',
     basePrice: 599,
-    image: 'https://via.placeholder.com/350x420?text=Slim+Fit+Top',
+    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Lightweight top with stretch and premium finish.',
     fabrics: ['cotton', 'cotton-spandex'],
     colors: ['white', 'pink', 'black', 'lightblue'],
@@ -91,7 +91,7 @@ const products = [
     name: 'Stitched V-neck Tee',
     category: 'Men',
     basePrice: 529,
-    image: 'https://via.placeholder.com/350x420?text=V-neck+Tee',
+    image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Soft V-neck style tee for daily wear.',
     fabrics: ['cotton'],
     colors: ['white', 'black', 'navy', 'green'],
@@ -116,7 +116,7 @@ const products = [
     name: 'Stitched Relaxed Fit T-Shirt',
     category: 'Women',
     basePrice: 579,
-    image: 'https://via.placeholder.com/350x420?text=Relaxed+Fit',
+    image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Relaxed fit top with soft touch and dropped shoulders.',
     fabrics: ['cotton-blend'],
     colors: ['peach', 'gray', 'white', 'yellow'],
@@ -141,7 +141,7 @@ const products = [
     name: 'Stitched Performance Tee',
     category: 'Men',
     basePrice: 699,
-    image: 'https://via.placeholder.com/350x420?text=Performance+Tee',
+    image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Quick-dry performance tee with anti-odor finish.',
     fabrics: ['polyester', 'polyester-blend'],
     colors: ['black', 'white', 'blue', 'red'],
@@ -166,7 +166,7 @@ const products = [
     name: 'Stitched Floral Graphic Tee',
     category: 'Women',
     basePrice: 649,
-    image: 'https://via.placeholder.com/350x420?text=Floral+Graphic',
+    image: 'https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Trendy floral graphic tee for a modern look.',
     fabrics: ['cotton'],
     colors: ['white', 'pink', 'lightgreen'],
@@ -191,7 +191,7 @@ const products = [
     name: 'Stitched Urban Henley',
     category: 'Men',
     basePrice: 679,
-    image: 'https://via.placeholder.com/350x420?text=Urban+Henley',
+    image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Classic henley with 3-button placket and premium knit.',
     fabrics: ['cotton-blend'],
     colors: ['gray', 'navy', 'olive'],
@@ -216,7 +216,7 @@ const products = [
     name: 'Stitched Comfy Crop Top',
     category: 'Women',
     basePrice: 529,
-    image: 'https://via.placeholder.com/350x420?text=Comfy+Crop+Top',
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Soft crop top ideal for summer days.',
     fabrics: ['cotton'],
     colors: ['black', 'white', 'mauve'],
@@ -241,7 +241,7 @@ const products = [
     name: 'Stitched Longline Tee',
     category: 'Men',
     basePrice: 569,
-    image: 'https://via.placeholder.com/350x420?text=Longline+Tee',
+    image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=350&h=420&q=80',
     description: 'Modern longline t-shirt with stitched hem.',
     fabrics: ['cotton'],
     colors: ['white', 'black', 'moss'],
@@ -388,7 +388,7 @@ const db = {
       // allow passing a custom date for seeding
       const d = date ? new Date(date) : new Date();
       d.setHours(0, 0, 0, 0);
-      
+
       let record = analytics.find(a => {
         const aDate = new Date(a.date);
         aDate.setHours(0, 0, 0, 0);
@@ -457,8 +457,8 @@ const db = {
         });
       });
 
-      aggregated.averageOrderValue = aggregated.totalOrders > 0 
-        ? aggregated.totalRevenue / aggregated.totalOrders 
+      aggregated.averageOrderValue = aggregated.totalOrders > 0
+        ? aggregated.totalRevenue / aggregated.totalOrders
         : 0;
 
       // compute monthly orders from raw orders list for chart
@@ -506,8 +506,8 @@ function initializeDummyData() {
   // create sample customers and required login accounts
   if (users.length === 0) {
     const requiredUsers = [
-      { name: 'Demo User', email: 'user@gmail.com', password: '1234', role: 'user'},
-      { name: 'Stitched Admin', email: 'admin@stitched.com', password: 'admin123', role: 'admin'},
+      { name: 'Demo User', email: 'user@gmail.com', password: '1234', role: 'user' },
+      { name: 'Stitched Admin', email: 'admin@stitched.com', password: 'admin123', role: 'admin' },
       { name: 'Rahul Sharma', email: 'rahul@example.com', password: 'password123', role: 'user' },
       { name: 'Priya Patel', email: 'priya@example.com', password: 'password123', role: 'user' },
       { name: 'Arjun Mehta', email: 'arjun@example.com', password: 'password123', role: 'user' },
