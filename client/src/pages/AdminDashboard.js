@@ -311,37 +311,46 @@ const AdminDashboard = () => {
               const badReviews = mockReviews.filter(r => r.rating <= 2).length;
               
               // Count reasons frequency
-              const reasons = {};
-              mockReviews.forEach(r => {
-                const reasonStr = r.reason || r.reasonTag;
-                if (reasonStr) {
-                  if (!reasons[reasonStr]) reasons[reasonStr] = { good: 0, bad: 0 };
-                  if (r.rating >= 4) reasons[reasonStr].good++;
-                  if (r.rating <= 2) reasons[reasonStr].bad++;
-                }
+              const positiveReviews = mockReviews.filter(r => r.rating >= 4);
+              const positiveReasonCount = {};
+              positiveReviews.forEach(r => {
+                const reason = r.reason || r.reasonTag || "General";
+                positiveReasonCount[reason] = (positiveReasonCount[reason] || 0) + 1;
               });
-              
-              let topGoodReason = 'None';
-              let topBadReason = 'None';
-              let maxGood = 0;
-              let maxBad = 0;
-              
-              Object.keys(reasons).forEach(tag => {
-                if (reasons[tag].good > maxGood) { maxGood = reasons[tag].good; topGoodReason = tag; }
-                if (reasons[tag].bad > maxBad) { maxBad = reasons[tag].bad; topBadReason = tag; }
+
+              let topPositiveReason = null;
+              let topPositivePercent = 0;
+
+              if (positiveReviews.length > 0) {
+                const sorted = Object.entries(positiveReasonCount).sort((a, b) => b[1] - a[1]);
+                topPositiveReason = sorted[0][0];
+                topPositivePercent = Math.round((sorted[0][1] / positiveReviews.length) * 100);
+              }
+
+              const negativeReviews = mockReviews.filter(r => r.rating <= 2);
+              const negativeReasonCount = {};
+              negativeReviews.forEach(r => {
+                const reason = r.reason || r.reasonTag || "General";
+                negativeReasonCount[reason] = (negativeReasonCount[reason] || 0) + 1;
               });
-              
-              const topGoodPerc = totalReviews > 0 ? Math.round((maxGood / totalReviews) * 100) : 0;
-              const topBadPerc = totalReviews > 0 ? Math.round((maxBad / totalReviews) * 100) : 0;
+
+              let topNegativeReason = null;
+              let topNegativePercent = 0;
+
+              if (negativeReviews.length > 0) {
+                const sorted = Object.entries(negativeReasonCount).sort((a, b) => b[1] - a[1]);
+                topNegativeReason = sorted[0][0];
+                topNegativePercent = Math.round((sorted[0][1] / negativeReviews.length) * 100);
+              }
 
               return (
                 <div key={product._id} className="border p-4 rounded-lg bg-gray-50 flex flex-col justify-between shadow-sm">
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <p className="font-bold text-gray-800">{product.name}</p>
-                      <p className="text-sm font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded flex items-center gap-1 shadow-sm">
-                        ⭐ {avgRating}
-                      </p>
+                       <p className="font-bold text-gray-800">{product.name}</p>
+                       <p className="text-sm font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded flex items-center gap-1 shadow-sm">
+                         ⭐ {avgRating}
+                       </p>
                     </div>
                     <div className="flex justify-between text-sm mb-3">
                       <p className="text-gray-600">Total Reviews: <span className="font-bold text-gray-800">{totalReviews}</span></p>
@@ -350,23 +359,23 @@ const AdminDashboard = () => {
                   </div>
                   
                   <div className="mt-2 text-sm bg-white p-3 rounded-lg border shadow-sm">
-                    {maxGood > 0 ? (
+                    {topPositiveReason ? (
                       <p className="flex items-center gap-2 mb-2">
                         <span className="text-green-700 font-bold bg-green-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          👍 {topGoodPerc}%
+                          👍 {topPositivePercent}%
                         </span> 
-                        <span className="text-gray-600">liked <span className="font-semibold text-gray-800">{topGoodReason}</span></span>
+                        <span className="text-gray-600">liked <span className="font-semibold text-gray-800">{topPositiveReason}</span></span>
                       </p>
                     ) : (
                       <p className="flex items-center gap-2 text-gray-500 italic mb-2">No positive feedback available.</p>
                     )}
 
-                    {maxBad > 0 ? (
+                    {topNegativeReason ? (
                       <p className="flex items-center gap-2">
                         <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          👎 {topBadPerc}%
+                          👎 {topNegativePercent}%
                         </span> 
-                        <span className="text-gray-600">disliked <span className="font-semibold text-gray-800">{topBadReason}</span></span>
+                        <span className="text-gray-600">disliked <span className="font-semibold text-gray-800">{topNegativeReason}</span></span>
                       </p>
                     ) : (
                       <p className="flex items-center gap-2 text-gray-500 italic">No significant negative complaints.</p>
