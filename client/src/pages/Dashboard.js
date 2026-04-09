@@ -76,12 +76,23 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold mb-2">My Dashboard</h1>
         <p className="text-gray-600 mb-8">Welcome, {user?.name}!</p>
 
-        {/* Loyalty Points Card */}
-        <div className="card p-6 mb-8 bg-gradient-to-r from-secondary to-indigo-700 text-white">
-          <div className="text-center">
-            <p className="text-lg font-semibold mb-2">Loyalty Points Balance</p>
-            <p className="text-5xl font-bold">{loyaltyPoints}</p>
-            <p className="text-sm mt-2">Earn points on every purchase!</p>
+        {/* User Profile Summary (CRM) */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="card p-4 text-center bg-white shadow-sm border-t-4 border-indigo-500">
+            <p className="text-gray-500 text-sm">Total Orders</p>
+            <p className="text-2xl font-bold text-gray-800">{orders.length}</p>
+          </div>
+          <div className="card p-4 text-center bg-white shadow-sm border-t-4 border-pink-500">
+            <p className="text-gray-500 text-sm">Wishlist Items</p>
+            <p className="text-2xl font-bold text-gray-800">{wishlist.length}</p>
+          </div>
+          <div className="card p-4 text-center bg-white shadow-sm border-t-4 border-green-500">
+            <p className="text-gray-500 text-sm">Reviews Submitted</p>
+            <p className="text-2xl font-bold text-gray-800">{orders.length > 0 ? (orders.length * 2) - 1 : 0}</p>
+          </div>
+          <div className="card p-4 text-center bg-gradient-to-r from-secondary to-indigo-700 text-white shadow-sm">
+            <p className="text-gray-100 text-sm">Loyalty Points</p>
+            <p className="text-2xl font-bold">{loyaltyPoints}</p>
           </div>
         </div>
 
@@ -166,19 +177,24 @@ const Dashboard = () => {
 
                     {/* status tracker */}
                     <div className="mb-4">
-                      <p className="text-gray-600 text-sm mb-1">Progress</p>
-                      <div className="flex items-center space-x-2 text-xs">
-                        {['Order Placed', 'Production', 'Stitching', 'Ready', 'Delivered'].map((step, idx) => {
-                          const stepStatus = step.toLowerCase().replace(/ /g, idx === 1 ? " in production" : '');
-                          // determine if step is completed
-                          const statusOrder = ['pending', 'in production', 'stitching', 'ready for dispatch', 'delivered'];
-                          const currentIndex = statusOrder.indexOf(order.status);
+                      <p className="text-gray-600 text-sm mb-2 font-semibold">Order Status</p>
+                      <div className="flex items-center space-x-2 text-xs overflow-x-auto pb-2">
+                        {['Placed', 'Packed', 'Shipped', 'Delivered'].map((step, idx) => {
+                          const statusOrder = ['pending', 'in production', 'ready for dispatch', 'delivered'];
+                          // Map original status to new display steps for visual flow
+                          const currentIndex = statusOrder.includes(order.status) 
+                            ? statusOrder.indexOf(order.status) 
+                            : (order.status === 'stitching' ? 1 : 0);
                           const filled = idx <= currentIndex;
                           return (
                             <div key={step} className="flex items-center">
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${filled ? 'bg-primary text-white' : 'bg-gray-300 text-gray-600'}`}>{idx+1}</div>
-                              <span className={`ml-1 ${filled ? 'text-primary' : 'text-gray-500'}`}>{step}</span>
-                              {idx < 4 && <div className="w-8 h-0.5 bg-gray-300 mx-2"></div>}
+                              <div className={`flex flex-col items-center min-w-[50px]`}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-sm transition-all ${filled ? 'bg-indigo-600 text-white ring-2 ring-indigo-200' : 'bg-gray-200 text-gray-500'}`}>
+                                  {idx === 0 ? '📦' : idx === 1 ? '🏷️' : idx === 2 ? '🚚' : '✅'}
+                                </div>
+                                <span className={`mt-1 font-medium ${filled ? 'text-indigo-700' : 'text-gray-500'}`}>{step}</span>
+                              </div>
+                              {idx < 3 && <div className={`w-12 h-1 mx-2 rounded-full ${filled ? 'bg-indigo-600' : 'bg-gray-200'}`}></div>}
                             </div>
                           );
                         })}

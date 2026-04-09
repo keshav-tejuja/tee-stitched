@@ -112,7 +112,12 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <div className="flex items-center gap-3 mb-8">
+          <h1 className="text-3xl font-bold">Checkout</h1>
+          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm">
+            🔒 Secure Checkout
+          </span>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Shipping Address */}
@@ -179,6 +184,27 @@ const Checkout = () => {
             </div>
           </div>
 
+          {/* Payment Options (Mock) */}
+          <div className="card p-6 mt-8">
+            <h2 className="text-xl font-bold mb-4">Payment Method</h2>
+            <div className="space-y-3">
+              <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <input type="radio" name="payment" defaultChecked className="w-4 h-4 text-indigo-600" />
+                <span className="font-medium">UPI (Google Pay, PhonePe, Paytm)</span>
+              </label>
+              <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <input type="radio" name="payment" className="w-4 h-4 text-indigo-600" />
+                <span className="font-medium">Credit / Debit Card</span>
+              </label>
+              <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <input type="radio" name="payment" className="w-4 h-4 text-indigo-600" />
+                <span className="font-medium">Net Banking</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div>
           {/* Order Summary */}
           <div className="card p-6">
             <h2 className="text-xl font-bold mb-4">Order Summary</h2>

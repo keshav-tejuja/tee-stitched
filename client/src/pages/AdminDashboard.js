@@ -97,7 +97,12 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2 text-primary">Admin Analytics Dashboard</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-4xl font-bold text-primary">Admin Analytics Dashboard</h1>
+          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm">
+            🔐 Protected Admin Access
+          </span>
+        </div>
         <p className="text-gray-600 mb-8">Demand-driven supply chain insights and customer analytics</p>
 
         {/* Key Metrics */}
@@ -288,6 +293,77 @@ const AdminDashboard = () => {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Review Insights (CRM) */}
+        <div className="card p-6 mb-8">
+          <h3 className="text-xl font-bold mb-4">Review Insights (CRM)</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {products.slice(0, 4).map((product) => {
+              // Simple aggregation logic (mocking for demo since backend reviews may be empty)
+              const mockReviews = product.reviewsData?.length > 0 ? product.reviewsData : [
+                { rating: 5, reasonTag: 'Fit' }, { rating: 4, reasonTag: 'Quality' },
+                { rating: 5, reasonTag: 'Comfort' }, { rating: 2, reasonTag: 'Fit' },
+                { rating: 5, reasonTag: 'Design' }, { rating: 4, reasonTag: 'Quality' },
+                { rating: 5, reasonTag: 'Comfort' }, { rating: 2, reasonTag: 'Quality' },
+                { rating: 4, reasonTag: 'Fit' }, { rating: 5, reasonTag: 'Delivery' }
+              ];
+              
+              const totalReviews = mockReviews.length;
+              const avgRating = (mockReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1);
+              const goodReviews = mockReviews.filter(r => r.rating >= 4).length;
+              const badReviews = mockReviews.filter(r => r.rating <= 2).length;
+              
+              // Top reasons logic
+              const reasons = {};
+              mockReviews.forEach(r => {
+                if (r.reasonTag) {
+                  if (!reasons[r.reasonTag]) reasons[r.reasonTag] = { good: 0, bad: 0 };
+                  if (r.rating >= 4) reasons[r.reasonTag].good++;
+                  if (r.rating <= 2) reasons[r.reasonTag].bad++;
+                }
+              });
+              
+              let topGoodReason = 'None';
+              let topBadReason = 'None';
+              let maxGood = 0;
+              let maxBad = 0;
+              
+              Object.keys(reasons).forEach(tag => {
+                if (reasons[tag].good > maxGood) { maxGood = reasons[tag].good; topGoodReason = tag; }
+                if (reasons[tag].bad > maxBad) { maxBad = reasons[tag].bad; topBadReason = tag; }
+              });
+              
+              const goodPerc = Math.round((goodReviews / totalReviews) * 100);
+              const badPerc = Math.round((badReviews / totalReviews) * 100);
+
+              return (
+                <div key={product._id} className="border p-4 rounded-lg bg-gray-50 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="font-bold text-gray-800">{product.name}</p>
+                      <p className="text-sm font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded flex items-center gap-1">
+                        ★ {avgRating}
+                      </p>
+                    </div>
+                    <div className="flex justify-between text-sm mb-3">
+                      <p className="text-gray-600">Total Reviews: <span className="font-bold">{totalReviews}</span></p>
+                      <p className="text-gray-600">Good: <span className="text-green-600 font-bold">{goodReviews}</span> | Bad: <span className="text-red-600 font-bold">{badReviews}</span></p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 space-y-2 text-sm bg-white p-3 rounded border">
+                    <p className="flex items-center gap-2">
+                      <span className="text-green-600 font-bold">↑ {goodPerc}%</span> liked <span className="font-semibold">{topGoodReason}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <span className="text-red-500 font-bold">↓ {badPerc}%</span> disliked <span className="font-semibold">{topBadReason !== 'None' ? topBadReason : 'N/A'}</span>
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

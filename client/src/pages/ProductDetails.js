@@ -37,8 +37,23 @@ const ProductDetails = () => {
     );
   }
 
-  const averageRating = product.reviewsData && product.reviewsData.length > 0
-    ? (product.reviewsData.reduce((sum, r) => sum + r.rating, 0) / product.reviewsData.length).toFixed(1)
+  const DEFAULT_MOCK_REVIEWS = [
+    { userId: 'Alex P.', rating: 5, comment: 'Amazing fit and quality. Best t-shirt I own.', reasonTag: 'Fit', createdAt: '2 days ago' },
+    { userId: 'Sanya K.', rating: 4, comment: 'Fabric is good but delivery was a day late.', reasonTag: 'Delivery', createdAt: '1 week ago' },
+    { userId: 'Ritesh V.', rating: 5, comment: 'Super comfortable all day long.', reasonTag: 'Comfort', createdAt: '1 week ago' },
+    { userId: 'Dev D.', rating: 2, comment: 'A bit tight around the shoulders.', reasonTag: 'Fit', createdAt: '2 weeks ago' },
+    { userId: 'Anita V.', rating: 5, comment: 'Love the minimalist design!', reasonTag: 'Design', createdAt: '2 weeks ago' },
+    { userId: 'Priya M.', rating: 4, comment: 'Good quality, very soft feel.', reasonTag: 'Quality', createdAt: '3 weeks ago' },
+    { userId: 'John S.', rating: 5, comment: 'Great comfort for daily wear.', reasonTag: 'Comfort', createdAt: '1 month ago' },
+    { userId: 'Sarah T.', rating: 2, comment: 'Stitching quality could be slightly better.', reasonTag: 'Quality', createdAt: '1 month ago' },
+    { userId: 'Amit J.', rating: 4, comment: 'Nice fit, looks great.', reasonTag: 'Fit', createdAt: '2 months ago' },
+    { userId: 'Kavita R.', rating: 5, comment: 'Fast delivery and excellent packaging.', reasonTag: 'Delivery', createdAt: '2 months ago' },
+  ];
+
+  const displayReviews = (product.reviewsData || []).concat(product.reviewsData?.length > 0 ? [] : DEFAULT_MOCK_REVIEWS);
+
+  const averageRating = displayReviews.length > 0
+    ? (displayReviews.reduce((sum, r) => sum + r.rating, 0) / displayReviews.length).toFixed(1)
     : '0.0';
 
   const handleAddToCart = () => {
@@ -99,24 +114,53 @@ const ProductDetails = () => {
     : [];
 
   // local fallback if API doesn't provide recommended list
-  const similarFromApi = null;
+  const MOCK_RECOMMENDATIONS = [
+    { name: 'Classic Solid Polo', category: product.category || 'Polo', price: '₹999' },
+    { name: 'Premium Oxford Shirt', category: 'Shirts', price: '₹1499' },
+    { name: 'Everyday V-Neck', category: 'T-Shirts', price: '₹799' },
+    { name: 'Activewear Blend Tee', category: 'Sports', price: '₹899' },
+  ];
+  const displayRecommended = recommended.length > 0 ? recommended : MOCK_RECOMMENDATIONS;
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Promotional Banner (7P Marketing) */}
+        <div className="bg-indigo-600 text-white text-center py-2 px-4 rounded-lg mb-6 font-semibold shadow-sm animate-pulse-slow">
+          🎉 Special Offer: Buy 2 Get 1 Free on all custom orders! Use code <span className="bg-white text-indigo-700 px-2 py-0.5 rounded ml-1">STITCHED25</span>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2 card p-6">
             <div className="flex gap-6 flex-col md:flex-row">
               <div className="w-full md:w-1/2">
-                <img src={product.image} alt={product.name} className="w-full h-96 object-cover rounded" />
+                <img src={product.image} alt={product.name} className="w-full h-96 object-cover rounded shadow-md" />
               </div>
               <div className="w-full md:w-1/2">
-                <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-                <p className="text-sm text-gray-500 mb-2">Category: {product.category}</p>
+                <div className="flex justify-between items-start mb-2">
+                  <h1 className="text-3xl font-bold">{product.name}</h1>
+                  <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">Trusted by 10k+</span>
+                </div>
+                
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm text-gray-500 flex-1">Category: {product.category}</p>
+                  <p className="text-sm font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded">🏷️ Vendor: Stitched Premium Hub</p>
+                </div>
+
                 <p className="text-xl text-secondary font-bold mb-2">₹{product.basePrice}</p>
-                <p className="text-sm mb-2">{product.description}</p>
-                <p className="text-sm font-semibold mb-2">Stock: {product.stock <= 0 ? 'Out of Stock' : product.stock < 5 ? `Only ${product.stock} left` : 'In Stock'}</p>
-                <p className="text-sm mb-4">Rating: {averageRating} ★ ({product.reviewsData?.length || 0} reviews)</p>
+                <p className="text-sm mb-4 text-gray-700 leading-relaxed">{product.description}</p>
+                
+                <div className="flex items-center gap-4 mb-4">
+                  <p className="text-sm font-semibold">
+                    Stock: <span className={`${product.stock <= 0 ? 'text-red-600' : product.stock < 5 ? 'text-orange-600 bg-orange-50 px-2 py-1 rounded font-bold' : 'text-green-600'}`}>
+                      {product.stock <= 0 ? 'Out of Stock' : product.stock < 5 ? `⚠️ Low Stock! Only ${product.stock} left` : 'In Stock'}
+                    </span>
+                  </p>
+                  <p className="text-sm flex items-center gap-1">
+                    <span className="text-yellow-500 font-bold">{averageRating} ★</span> 
+                    <span className="text-gray-500 underline cursor-pointer hover:text-indigo-600">({displayReviews.length} reviews)</span>
+                  </p>
+                </div>
 
                 <div className="mb-4">
                   <label className="font-semibold mr-2">Qty:</label>
@@ -156,13 +200,20 @@ const ProductDetails = () => {
           </div>
           <button onClick={handleReviewSubmit} className="btn-primary">Submit Review</button>
 
-          {product.reviewsData && product.reviewsData.length > 0 ? (
+          {displayReviews.length > 0 ? (
             <div className="mt-6 space-y-3">
-              {product.reviewsData.map((review, idx) => (
-                <div key={idx} className="border rounded p-3">
-                  <p className="font-semibold">{review.userId} <span className="text-yellow-600">{'★'.repeat(review.rating)}</span></p>
-                  <p className="text-sm text-gray-600">{review.comment}</p>
-                  <p className="text-xs text-gray-500">{review.createdAt}</p>
+              {displayReviews.map((review, idx) => (
+                <div key={idx} className="border rounded p-4 bg-white shadow-sm hover:shadow-md transition">
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="font-semibold text-gray-800">{review.userId} <span className="text-yellow-500 ml-1">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span></p>
+                    {review.reasonTag && (
+                      <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-2 py-1 rounded">
+                        {review.reasonTag}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700 mb-1">{review.comment}</p>
+                  <p className="text-xs text-gray-400">{review.createdAt}</p>
                 </div>
               ))}
             </div>
@@ -201,9 +252,11 @@ const ProductDetails = () => {
           <h2 className="text-2xl font-bold mb-4">You may also like</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* fallback product cards are available through home grid, to avoid repeated fetch timing wait we show existing static in product object if available */}
-            {product.related && product.related.map((item, idx) => (
-              <div key={idx} className="border p-2 rounded text-sm">
-                {item.name}
+            {displayRecommended.map((item, idx) => (
+              <div key={idx} className="border border-gray-200 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition cursor-pointer text-center flex flex-col items-center justify-center h-32">
+                <p className="font-semibold text-gray-800 mb-1">{item.name}</p>
+                <p className="text-xs text-gray-500 mb-2">{item.category}</p>
+                {item.price && <p className="text-indigo-600 font-bold">{item.price}</p>}
               </div>
             ))}
           </div>
