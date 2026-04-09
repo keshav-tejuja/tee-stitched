@@ -331,8 +331,8 @@ const AdminDashboard = () => {
                 if (reasons[tag].bad > maxBad) { maxBad = reasons[tag].bad; topBadReason = tag; }
               });
               
-              const goodPerc = totalReviews > 0 ? Math.round((goodReviews / totalReviews) * 100) : 0;
-              const badPerc = totalReviews > 0 ? Math.round((badReviews / totalReviews) * 100) : 0;
+              const topGoodPerc = totalReviews > 0 ? Math.round((maxGood / totalReviews) * 100) : 0;
+              const topBadPerc = totalReviews > 0 ? Math.round((maxBad / totalReviews) * 100) : 0;
 
               return (
                 <div key={product._id} className="border p-4 rounded-lg bg-gray-50 flex flex-col justify-between shadow-sm">
@@ -349,22 +349,22 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-2 space-y-2 text-sm bg-white p-3 rounded-lg border shadow-sm">
-                    {topGoodReason !== 'None' ? (
-                      <p className="flex items-center gap-2">
+                  <div className="mt-2 text-sm bg-white p-3 rounded-lg border shadow-sm">
+                    {maxGood > 0 ? (
+                      <p className="flex items-center gap-2 mb-2">
                         <span className="text-green-700 font-bold bg-green-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          👍 {goodPerc}%
+                          👍 {topGoodPerc}%
                         </span> 
                         <span className="text-gray-600">liked <span className="font-semibold text-gray-800">{topGoodReason}</span></span>
                       </p>
                     ) : (
-                      <p className="flex items-center gap-2 text-gray-500 italic">No leading positive trend.</p>
+                      <p className="flex items-center gap-2 text-gray-500 italic mb-2">No positive feedback available.</p>
                     )}
 
-                    {topBadReason !== 'None' ? (
+                    {maxBad > 0 ? (
                       <p className="flex items-center gap-2">
                         <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          👎 {badPerc}%
+                          👎 {topBadPerc}%
                         </span> 
                         <span className="text-gray-600">disliked <span className="font-semibold text-gray-800">{topBadReason}</span></span>
                       </p>
