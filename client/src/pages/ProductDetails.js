@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { productService } from '../services/api';
 import { CartContext } from '../context/CartContext';
+import { getReviewsForProduct } from '../data/reviewsData';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -37,20 +38,10 @@ const ProductDetails = () => {
     );
   }
 
-  const DEFAULT_MOCK_REVIEWS = [
-    { userId: 'Alex P.', rating: 5, comment: 'Amazing fit and quality. Best t-shirt I own.', reasonTag: 'Fit', createdAt: '2 days ago' },
-    { userId: 'Sanya K.', rating: 4, comment: 'Fabric is good but delivery was a day late.', reasonTag: 'Delivery', createdAt: '1 week ago' },
-    { userId: 'Ritesh V.', rating: 5, comment: 'Super comfortable all day long.', reasonTag: 'Comfort', createdAt: '1 week ago' },
-    { userId: 'Dev D.', rating: 2, comment: 'A bit tight around the shoulders.', reasonTag: 'Fit', createdAt: '2 weeks ago' },
-    { userId: 'Anita V.', rating: 5, comment: 'Love the minimalist design!', reasonTag: 'Design', createdAt: '2 weeks ago' },
-    { userId: 'Priya M.', rating: 4, comment: 'Good quality, very soft feel.', reasonTag: 'Quality', createdAt: '3 weeks ago' },
-    { userId: 'John S.', rating: 5, comment: 'Great comfort for daily wear.', reasonTag: 'Comfort', createdAt: '1 month ago' },
-    { userId: 'Sarah T.', rating: 2, comment: 'Stitching quality could be slightly better.', reasonTag: 'Quality', createdAt: '1 month ago' },
-    { userId: 'Amit J.', rating: 4, comment: 'Nice fit, looks great.', reasonTag: 'Fit', createdAt: '2 months ago' },
-    { userId: 'Kavita R.', rating: 5, comment: 'Fast delivery and excellent packaging.', reasonTag: 'Delivery', createdAt: '2 months ago' },
-  ];
-
-  const displayReviews = (product.reviewsData || []).concat(product.reviewsData?.length > 0 ? [] : DEFAULT_MOCK_REVIEWS);
+  // Use the shared data for reviews
+  const displayReviews = product.reviewsData?.length > 0 
+    ? product.reviewsData 
+    : getReviewsForProduct(product._id || id);
 
   const averageRating = displayReviews.length > 0
     ? (displayReviews.reduce((sum, r) => sum + r.rating, 0) / displayReviews.length).toFixed(1)
@@ -206,9 +197,10 @@ const ProductDetails = () => {
                 <div key={idx} className="border rounded p-4 bg-white shadow-sm hover:shadow-md transition">
                   <div className="flex justify-between items-start mb-2">
                     <p className="font-semibold text-gray-800">{review.userId} <span className="text-yellow-500 ml-1">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span></p>
-                    {review.reasonTag && (
+                    {/* Map either reason or reasonTag */}
+                    {(review.reasonTag || review.reason) && (
                       <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-2 py-1 rounded">
-                        {review.reasonTag}
+                        {review.reasonTag || review.reason}
                       </span>
                     )}
                   </div>
