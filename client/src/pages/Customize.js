@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 import { productService, designService } from '../services/api';
+import Toast from '../components/Toast';
 
 const Customize = () => {
   const navigate = useNavigate();
@@ -17,10 +18,12 @@ const Customize = () => {
     color: 'black',
     size: 'M',
     fit: 'regular',
+    customText: '',
   });
   const [designName, setDesignName] = useState('');
   const [isSavingDesign, setIsSavingDesign] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -55,12 +58,12 @@ const Customize = () => {
 
   const handleAddToCart = () => {
     if (!selectedProduct || selectedProduct.stock <= 0) {
-      alert('Cannot add out-of-stock product');
+      setToast({ message: 'Cannot add out-of-stock product', type: 'error' });
       return;
     }
 
     if (quantity < 1) {
-      alert('Quantity must be at least 1');
+      setToast({ message: 'Quantity must be at least 1', type: 'error' });
       return;
     }
 
@@ -73,13 +76,13 @@ const Customize = () => {
     };
 
     addToCart(cartItem);
-    alert('Added to cart! Proceed to checkout.');
-    navigate('/cart');
+    setToast({ message: 'Added to cart! 🎉', type: 'success' });
+    setTimeout(() => navigate('/cart'), 1000);
   };
 
   const handleSaveDesign = async () => {
     if (!designName.trim()) {
-      alert('Please enter a design name');
+      setToast({ message: 'Please enter a design name', type: 'error' });
       return;
     }
 
@@ -90,26 +93,57 @@ const Customize = () => {
         ...design,
         designData: design,
       });
-      alert('Design saved successfully!');
+      setToast({ message: 'Design saved successfully!', type: 'success' });
       setDesignName('');
     } catch (error) {
       console.error('Error saving design:', error);
-      alert('Error saving design');
+      setToast({ message: 'Error saving design', type: 'error' });
     } finally {
       setIsSavingDesign(false);
     }
   };
 
+  // Color name to hex mapping for the color picker
+  const colorMap = {
+    black: '#0a0a0a', white: '#ffffff', red: '#ef4444', blue: '#3b82f6',
+    green: '#22c55e', yellow: '#eab308', pink: '#ec4899', purple: '#8b5cf6',
+    orange: '#f97316', gray: '#6b7280', navy: '#1e3a5f', maroon: '#7f1d1d',
+    teal: '#14b8a6', brown: '#92400e',
+  };
+
+  const getColorHex = (colorName) => {
+    return colorMap[colorName?.toLowerCase()] || colorName || '#0a0a0a';
+  };
+
+  // Compute contrasting text color
+  const getTextColor = (bgColor) => {
+    const hex = getColorHex(bgColor);
+    if (!hex || hex === '#ffffff' || hex === '#eab308' || hex === '#22c55e') return '#0a0a0a';
+    return '#ffffff';
+  };
+
   if (!selectedProduct) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen bg-surface">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-2xl bg-primary animate-pulse"></div>
+          <div className="absolute inset-0 w-16 h-16 rounded-2xl bg-secondary/30 animate-ping"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
+    <div className="min-h-screen bg-surface py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">Design Your Custom T-Shirt</h1>
+        {/* Header */}
+        <div className="text-center mb-8 animate-fade-in">
+          <h1 className="text-3xl md:text-4xl font-bold text-primary">Design Your Custom Tee</h1>
+          <p className="text-sm text-gray-500 mt-2">Choose your style, customize every detail</p>
+        </div>
 
-        <div className="mb-6 flex flex-wrap gap-3">
+        {/* Product Selector */}
+        <div className="mb-6 flex flex-wrap gap-2 justify-center animate-fade-in">
           {products.map((prod) => (
             <button
               key={prod._id}
@@ -123,7 +157,11 @@ const Customize = () => {
                   fit: prod.fits[0],
                 });
               }}
-              className={`${selectedProduct._id === prod._id ? 'bg-secondary text-white' : 'bg-white text-gray-700'} border px-3 py-2 rounded`}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                selectedProduct._id === prod._id
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+              }`}
             >
               {prod.name}
             </button>
@@ -132,95 +170,117 @@ const Customize = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Preview Section */}
-          <div className="card p-8">
-            <div className="flex flex-col items-center">
-              <h2 className="text-2xl font-bold mb-6">Live Preview</h2>
-              
-              {/* Product Image */}
-              {selectedProduct && selectedProduct.image && (
-                <div className="mb-6 w-full flex justify-center">
-                  <img
-                    src={selectedProduct.image}
-                    alt={selectedProduct.name}
-                    className="w-32 h-40 object-contain"
+          <div className="card p-8 animate-fade-in">
+            <h2 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">
+              <span className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center text-secondary text-sm">👁</span>
+              Live Preview
+            </h2>
+            
+            {/* T-Shirt Preview */}
+            <div className="relative w-full aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl flex items-center justify-center overflow-hidden mb-6 border border-gray-200">
+              <div className="relative w-64">
+                <svg viewBox="0 0 300 400" className="w-full" xmlns="http://www.w3.org/2000/svg">
+                  {/* T-shirt body */}
+                  <path
+                    fill={getColorHex(design.color)}
+                    d="M 60 80 L 120 50 L 180 50 L 240 80 L 240 180 Q 240 200 220 220 L 220 320 L 80 320 L 80 220 Q 60 200 60 180 Z"
+                    className="transition-colors duration-300"
                   />
-                </div>
-              )}
-
-              {/* T-Shirt Preview with Dynamic Color */}
-              <div className="relative w-full h-96 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-6 border-2 border-gray-200">
-                <div className="relative w-64">
-                  {/* SVG T-shirt with actual color */}
-                  <svg
-                    viewBox="0 0 300 400"
-                    className="w-full h-96"
-                    xmlns="http://www.w3.org/2000/svg"
+                  {/* Collar */}
+                  <circle cx="150" cy="80" r="25" fill={getColorHex(design.color)} stroke="rgba(0,0,0,0.15)" strokeWidth="2" className="transition-colors duration-300" />
+                  {/* Left sleeve */}
+                  <path fill={getColorHex(design.color)} d="M 60 120 L 30 150 L 45 170 L 70 140 Z" stroke="rgba(0,0,0,0.1)" strokeWidth="1" className="transition-colors duration-300" />
+                  {/* Right sleeve */}
+                  <path fill={getColorHex(design.color)} d="M 240 120 L 270 150 L 255 170 L 230 140 Z" stroke="rgba(0,0,0,0.1)" strokeWidth="1" className="transition-colors duration-300" />
+                  {/* Custom text */}
+                  <text
+                    x="150" y={design.customText ? "230" : "250"}
+                    textAnchor="middle"
+                    fontSize={design.customText ? "16" : "14"}
+                    fill={getTextColor(design.color)}
+                    fontWeight="bold"
+                    opacity="0.9"
+                    fontFamily="Inter, sans-serif"
                   >
-                    {/* T-shirt body */}
-                    <path
-                      fill={design.color}
-                      d="M 60 80 L 120 50 L 180 50 L 240 80 L 240 180 Q 240 200 220 220 L 220 320 L 80 320 L 80 220 Q 60 200 60 180 Z"
-                    />
-                    {/* Collar */}
-                    <circle cx="150" cy="80" r="25" fill={design.color} stroke="#333" strokeWidth="2" />
-                    {/* Left sleeve */}
-                    <path
-                      fill={design.color}
-                      d="M 60 120 L 40 140 L 50 160 L 70 140 Z"
-                      stroke="#333"
-                      strokeWidth="1"
-                    />
-                    {/* Right sleeve */}
-                    <path
-                      fill={design.color}
-                      d="M 240 120 L 260 140 L 250 160 L 230 140 Z"
-                      stroke="#333"
-                      strokeWidth="1"
-                    />
-                    {/* Label text */}
+                    {design.customText || 'YOUR TEXT HERE'}
+                  </text>
+                  {design.customText && (
                     <text
-                      x="150"
-                      y="250"
-                      textAnchor="middle"
-                      fontSize="14"
-                      fill="#ffffff"
-                      fontWeight="bold"
-                      opacity="0.8"
+                      x="150" y="260"
+                      textAnchor="middle" fontSize="10"
+                      fill={getTextColor(design.color)}
+                      opacity="0.5"
+                      fontFamily="Inter, sans-serif"
                     >
-                      CUSTOM
+                      STITCHED ®
                     </text>
-                  </svg>
+                  )}
+                </svg>
+              </div>
+            </div>
+
+            {/* Product Image Thumbnail */}
+            {selectedProduct?.image && (
+              <div className="flex items-center gap-3 mb-4">
+                <img src={selectedProduct.image} alt={selectedProduct.name} className="w-12 h-12 object-cover rounded-xl border" />
+                <div>
+                  <p className="text-sm font-semibold text-primary">{selectedProduct.name}</p>
+                  <p className="text-xs text-gray-500">{selectedProduct.category}</p>
                 </div>
               </div>
+            )}
 
-              <div className="w-full space-y-2 text-sm bg-gray-50 p-4 rounded-lg">
-                <p><strong>Fabric:</strong> {design.fabric.toUpperCase()}</p>
-                <p><strong>Color:</strong> {design.color.toUpperCase()}</p>
-                <p><strong>Size:</strong> {design.size}</p>
-                <p><strong>Fit:</strong> {design.fit.toUpperCase()}</p>
-                <p><strong>Stock:</strong> {selectedProduct.stock <= 0 ? 'Out of Stock' : selectedProduct.stock < 5 ? `Only ${selectedProduct.stock} left` : 'In Stock'}</p>
-                <p className="pt-4 text-xl font-bold text-secondary">Price: ₹{selectedProduct.basePrice * quantity}</p>
+            {/* Specs Summary */}
+            <div className="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-xl">
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Fabric</p>
+                <p className="text-sm font-medium text-primary capitalize">{design.fabric}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Color</p>
+                <p className="text-sm font-medium text-primary capitalize">{design.color}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Size</p>
+                <p className="text-sm font-medium text-primary">{design.size}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Fit</p>
+                <p className="text-sm font-medium text-primary capitalize">{design.fit}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Stock</p>
+                <p className={`text-sm font-medium ${selectedProduct.stock <= 0 ? 'text-red-500' : selectedProduct.stock < 5 ? 'text-amber-500' : 'text-emerald-600'}`}>
+                  {selectedProduct.stock <= 0 ? 'Out of Stock' : selectedProduct.stock < 5 ? `Only ${selectedProduct.stock} left` : 'In Stock'}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Price</p>
+                <p className="text-lg font-bold text-primary">₹{selectedProduct.basePrice * quantity}</p>
               </div>
             </div>
           </div>
 
           {/* Customization Options */}
-          <div className="card p-8">
-            <h2 className="text-2xl font-bold mb-6">Customize Your Shirt</h2>
+          <div className="card p-8 animate-fade-in">
+            <h2 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">
+              <span className="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center text-secondary text-sm">✏️</span>
+              Customize Your Shirt
+            </h2>
 
             <div className="space-y-6">
-              {/* Fabric Selection */}
+              {/* Fabric */}
               <div>
-                <label className="block text-sm font-semibold mb-3">Fabric</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fabric</label>
                 <div className="grid grid-cols-3 gap-2">
                   {selectedProduct.fabrics.map((fabric) => (
                     <button
                       key={fabric}
                       onClick={() => handleDesignChange('fabric', fabric)}
-                      className={`p-3 rounded-lg border-2 transition ${
+                      className={`p-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 capitalize ${
                         design.fabric === fabric
-                          ? 'border-secondary bg-secondary text-white'
-                          : 'border-gray-300 hover:border-secondary'
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                     >
                       {fabric}
@@ -229,38 +289,37 @@ const Customize = () => {
                 </div>
               </div>
 
-              {/* Color Selection */}
+              {/* Color Picker */}
               <div>
-                <label className="block text-sm font-semibold mb-3">Color</label>
-                <div className="grid grid-cols-4 gap-2">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Color</label>
+                <div className="flex flex-wrap gap-2">
                   {selectedProduct.colors.map((color) => (
                     <button
                       key={color}
                       onClick={() => handleDesignChange('color', color)}
-                      className={`p-3 rounded-lg border-2 transition capitalize ${
-                        design.color === color
-                          ? 'border-secondary scale-105'
-                          : 'border-gray-300 hover:border-secondary'
+                      className={`w-10 h-10 rounded-xl transition-all duration-200 border-2 ${
+                        design.color === color ? 'border-primary scale-110 ring-2 ring-primary/20' : 'border-gray-200 hover:scale-105'
                       }`}
-                      style={{ backgroundColor: color }}
+                      style={{ backgroundColor: getColorHex(color) }}
                       title={color}
                     />
                   ))}
                 </div>
+                <p className="text-xs text-gray-400 mt-2 capitalize">Selected: {design.color}</p>
               </div>
 
-              {/* Size Selection */}
+              {/* Size */}
               <div>
-                <label className="block text-sm font-semibold mb-3">Size</label>
-                <div className="grid grid-cols-3 gap-2">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Size</label>
+                <div className="flex gap-2">
                   {selectedProduct.sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => handleDesignChange('size', size)}
-                      className={`p-3 rounded-lg border-2 transition font-semibold ${
+                      className={`w-12 h-12 rounded-xl border-2 text-sm font-bold transition-all duration-200 ${
                         design.size === size
-                          ? 'border-secondary bg-secondary text-white'
-                          : 'border-gray-300 hover:border-secondary'
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                     >
                       {size}
@@ -269,18 +328,18 @@ const Customize = () => {
                 </div>
               </div>
 
-              {/* Fit Selection */}
+              {/* Fit */}
               <div>
-                <label className="block text-sm font-semibold mb-3">Fit</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Fit</label>
                 <div className="grid grid-cols-3 gap-2">
                   {selectedProduct.fits.map((fit) => (
                     <button
                       key={fit}
                       onClick={() => handleDesignChange('fit', fit)}
-                      className={`p-3 rounded-lg border-2 transition capitalize ${
+                      className={`p-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 capitalize ${
                         design.fit === fit
-                          ? 'border-secondary bg-secondary text-white'
-                          : 'border-gray-300 hover:border-secondary'
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                     >
                       {fit}
@@ -289,25 +348,47 @@ const Customize = () => {
                 </div>
               </div>
 
-              {/* Quantity */}
+              {/* Custom Text Input */}
               <div>
-                <label className="block text-sm font-semibold mb-3">Quantity</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Custom Print Text</label>
                 <input
-                  type="number"
-                  min="1"
-                  value={quantity}
-                  onChange={(e) => setQuantity(parseInt(e.target.value))}
+                  type="text"
+                  placeholder="Enter text to print on your tee..."
+                  value={design.customText}
+                  onChange={(e) => handleDesignChange('customText', e.target.value.slice(0, 30))}
                   className="input-field"
+                  maxLength={30}
                 />
+                <p className="text-xs text-gray-400 mt-1">{design.customText?.length || 0}/30 characters</p>
               </div>
 
-              {/* Save Design Options */}
-              <div className="border-t pt-6">
-                <label className="block text-sm font-semibold mb-3">Save This Design</label>
+              {/* Quantity */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quantity</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
+                  >
+                    −
+                  </button>
+                  <span className="text-lg font-bold text-primary w-12 text-center">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(Math.min(20, quantity + 1))}
+                    className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Save Design */}
+              <div className="border-t border-gray-100 pt-6">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Save This Design</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Design name"
+                    placeholder="Give your design a name"
                     value={designName}
                     onChange={(e) => setDesignName(e.target.value)}
                     className="input-field flex-1"
@@ -317,22 +398,23 @@ const Customize = () => {
                     disabled={isSavingDesign}
                     className="btn-secondary disabled:opacity-50"
                   >
-                    {isSavingDesign ? 'Saving...' : 'Save'}
+                    {isSavingDesign ? '...' : 'Save'}
                   </button>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Add to Cart */}
               <button
                 onClick={handleAddToCart}
-                className="btn-primary w-full text-lg py-3"
+                className="btn-primary w-full !py-3.5 text-base"
               >
-                Add to Cart
+                Add to Cart — ₹{selectedProduct.basePrice * quantity}
               </button>
             </div>
           </div>
         </div>
       </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };

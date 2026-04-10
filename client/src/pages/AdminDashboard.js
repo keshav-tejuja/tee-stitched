@@ -3,20 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { orderService, analyticsService, userService, inventoryService, productService } from '../services/api';
 import { getReviewsForProduct } from '../data/reviewsData';
+import { getMockCustomers, getAbandonedCartUsers } from '../data/mockCustomers';
+import Toast from '../components/Toast';
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 
 const AdminDashboard = () => {
@@ -31,6 +22,10 @@ const AdminDashboard = () => {
   const [totalInventory, setTotalInventory] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  const mockCustomers = getMockCustomers();
+  const abandonedCarts = getAbandonedCartUsers();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,387 +56,363 @@ const AdminDashboard = () => {
   }, []);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-2xl bg-primary animate-pulse"></div>
+          <div className="absolute inset-0 w-12 h-12 rounded-2xl bg-secondary/30 animate-ping"></div>
+        </div>
+      </div>
+    );
   }
 
   const COLORS = ['#6366F1', '#EC4899', '#F59E0B', '#10B981', '#06B6D4', '#8B5CF6'];
 
-  // Prepare data for charts
   const sizesData = analytics?.popularSizes
-    ? Object.entries(analytics.popularSizes).map(([size, count]) => ({
-        name: size,
-        value: count,
-      }))
+    ? Object.entries(analytics.popularSizes).map(([size, count]) => ({ name: size, value: count }))
     : [];
 
   const fabricsData = analytics?.popularFabrics
-    ? Object.entries(analytics.popularFabrics).map(([fabric, count]) => ({
-        name: fabric,
-        value: count,
-      }))
+    ? Object.entries(analytics.popularFabrics).map(([fabric, count]) => ({ name: fabric, value: count }))
     : [];
 
   const fitsData = analytics?.popularFits
-    ? Object.entries(analytics.popularFits).map(([fit, count]) => ({
-        name: fit,
-        value: count,
-      }))
+    ? Object.entries(analytics.popularFits).map(([fit, count]) => ({ name: fit, value: count }))
     : [];
 
   const colorsData = analytics?.popularColors
-    ? Object.entries(analytics.popularColors).map(([color, count]) => ({
-        name: color,
-        value: count,
-      }))
+    ? Object.entries(analytics.popularColors).map(([color, count]) => ({ name: color, value: count }))
     : [];
 
+  const handleSendDiscount = (user) => {
+    setToast({ message: `10% discount email sent to ${user.email}! 📧`, type: 'success' });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-4xl font-bold text-primary">Admin Analytics Dashboard</h1>
-          <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 shadow-sm">
-            🔐 Protected Admin Access
-          </span>
+    <div className="animate-fade-in">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Analytics Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">Demand-driven supply chain insights</p>
         </div>
-        <p className="text-gray-600 mb-8">Demand-driven supply chain insights and customer analytics</p>
+        <span className="badge badge-red text-[10px]">🔐 Admin Only</span>
+      </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-6 mb-8">
-          <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Total Orders</p>
-            <p className="text-4xl font-bold text-blue-600">{analytics?.totalOrders || 0}</p>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
+        {[
+          { label: 'Total Orders', value: analytics?.totalOrders || 0, color: 'from-blue-50 to-blue-100', textColor: 'text-blue-600' },
+          { label: 'Revenue', value: `₹${analytics?.totalRevenue || 0}`, color: 'from-emerald-50 to-emerald-100', textColor: 'text-emerald-600' },
+          { label: 'Items Sold', value: analytics?.totalItemsSold || 0, color: 'from-purple-50 to-purple-100', textColor: 'text-purple-600' },
+          { label: 'Avg Order', value: `₹${analytics?.averageOrderValue || 0}`, color: 'from-pink-50 to-pink-100', textColor: 'text-pink-600' },
+          { label: 'In Production', value: orders.filter(o => o.status === 'in production').length, color: 'from-blue-50 to-blue-100', textColor: 'text-blue-600' },
+          { label: 'Inventory', value: totalInventory, color: 'from-amber-50 to-amber-100', textColor: 'text-amber-600' },
+          { label: 'Low Stock', value: lowStockCount, color: 'from-orange-50 to-orange-100', textColor: 'text-orange-600' },
+        ].map((metric, idx) => (
+          <div key={idx} className={`card p-4 bg-gradient-to-br ${metric.color} border-0`}>
+            <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{metric.label}</p>
+            <p className={`text-2xl font-bold ${metric.textColor} mt-1`}>{metric.value}</p>
           </div>
+        ))}
+      </div>
 
-          <div className="card p-6 bg-gradient-to-br from-green-50 to-green-100">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Total Revenue</p>
-            <p className="text-4xl font-bold text-green-600">₹{analytics?.totalRevenue || 0}</p>
-          </div>
-
-          <div className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Items Sold</p>
-            <p className="text-4xl font-bold text-purple-600">{analytics?.totalItemsSold || 0}</p>
-          </div>
-
-          <div className="card p-6 bg-gradient-to-br from-pink-50 to-pink-100">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Avg Order Value</p>
-            <p className="text-4xl font-bold text-pink-600">₹{analytics?.averageOrderValue || 0}</p>
-          </div>
-          <div className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Orders In Production</p>
-            <p className="text-4xl font-bold text-blue-600">{orders.filter(o => o.status === 'in production').length}</p>
-          </div>
-
-          <div className="card p-6 bg-gradient-to-br from-yellow-50 to-yellow-100">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Inventory Items</p>
-            <p className="text-4xl font-bold text-yellow-600">{totalInventory}</p>
-          </div>
-
-          <div className="card p-6 bg-gradient-to-br from-orange-50 to-orange-100">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Low Stock Alerts</p>
-            <p className="text-4xl font-bold text-orange-600">{lowStockCount}</p>
-          </div>
+      {/* Customer Insights */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="card p-5">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Total Customers</p>
+          <p className="text-3xl font-bold text-secondary mt-1">{insights?.totalCustomers || 0}</p>
         </div>
-
-        {/* Customer Insights */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="card p-6">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Total Customers</p>
-            <p className="text-3xl font-bold text-secondary">{insights?.totalCustomers || 0}</p>
-          </div>
-
-          <div className="card p-6">
-            <p className="text-gray-600 text-sm font-semibold mb-2">Retention Rate</p>
-            <p className="text-3xl font-bold text-accent">{insights?.customerRetentionRate || 0}%</p>
-          </div>
-
-          <div className="card p-6">
-            <p className="text-gray-600 text-sm font-semibold mb-2">New This Month</p>
-            <p className="text-3xl font-bold text-green-600">{insights?.newCustomersThisMonth || 0}</p>
-          </div>
+        <div className="card p-5">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Retention Rate</p>
+          <p className="text-3xl font-bold text-secondary mt-1">{insights?.customerRetentionRate || 0}%</p>
         </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Popular Sizes */}
-          <div className="card p-6">
-            <h3 className="text-xl font-bold mb-4">Demand by Size</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={sizesData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#6366F1" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Popular Fabrics */}
-          <div className="card p-6">
-            <h3 className="text-xl font-bold mb-4">Fabric Preference</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={fabricsData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {fabricsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Popular Fits */}
-          <div className="card p-6">
-            <h3 className="text-xl font-bold mb-4">Fit Preference</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={fitsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#EC4899" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Popular Colors */}
-          <div className="card p-6">
-            <h3 className="text-xl font-bold mb-4">Color Preference</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={colorsData.slice(0, 5)}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {colorsData.slice(0, 5).map((entry, index) => (
-                    <Cell key={`cell-color-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Products Table */}
-        <div className="card p-6 mb-8">
-          <h3 className="text-xl font-bold mb-4">Products Inventory</h3>
-          <div className="overflow-x-auto mt-4">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-4 py-2 text-left">Name</th>
-                  <th className="px-4 py-2 text-left">Category</th>
-                  <th className="px-4 py-2 text-left">Price</th>
-                  <th className="px-4 py-2 text-left">Stock</th>
-                  <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => {
-                  const lowStock = product.stock <= 5;
-                  return (
-                    <tr key={product._id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-2">{product.name}</td>
-                      <td className="px-4 py-2">{product.category}</td>
-                      <td className="px-4 py-2">₹{product.basePrice}</td>
-                      <td className="px-4 py-2">{product.stock}</td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${lowStock ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>
-                          {product.stock <= 0 ? 'Out of Stock' : lowStock ? 'Low Stock' : 'In Stock'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <button
-                          className="text-blue-600 hover:underline"
-                          onClick={async () => {
-                            const newStock = parseInt(prompt('Enter new stock quantity', product.stock));
-                            if (isNaN(newStock) || newStock < 0) return;
-                            try {
-                              await productService.updateStock(product._id, newStock);
-                              const res = await productService.getProducts();
-                              setProducts(res.data);
-                              alert('Stock updated');
-                            } catch (err) {
-                              console.error(err);
-                              alert('Failed updating stock');
-                            }
-                          }}
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Review Insights (CRM) */}
-        <div className="card p-6 mb-8">
-          <h3 className="text-xl font-bold mb-4">Review Insights (CRM)</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {products.slice(0, 4).map((product) => {
-              // Aggregate logic using shared frontend data
-              const mockReviews = product.reviewsData?.length > 0 ? product.reviewsData : getReviewsForProduct(product._id);
-              
-              const totalReviews = mockReviews.length;
-              const avgRating = totalReviews > 0 ? (mockReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1) : 0;
-              const goodReviews = mockReviews.filter(r => r.rating >= 4).length;
-              const badReviews = mockReviews.filter(r => r.rating <= 2).length;
-              
-              // Count reasons frequency
-              const positiveReviews = mockReviews.filter(r => r.rating >= 4);
-              const positiveReasonCount = {};
-              positiveReviews.forEach(r => {
-                const reason = r.reason || r.reasonTag || "General";
-                positiveReasonCount[reason] = (positiveReasonCount[reason] || 0) + 1;
-              });
-
-              let topPositiveReason = null;
-              let topPositivePercent = 0;
-
-              if (positiveReviews.length > 0) {
-                const sorted = Object.entries(positiveReasonCount).sort((a, b) => b[1] - a[1]);
-                topPositiveReason = sorted[0][0];
-                topPositivePercent = Math.round((sorted[0][1] / positiveReviews.length) * 100);
-              }
-
-              const negativeReviews = mockReviews.filter(r => r.rating <= 2);
-              const negativeReasonCount = {};
-              negativeReviews.forEach(r => {
-                const reason = r.reason || r.reasonTag || "General";
-                negativeReasonCount[reason] = (negativeReasonCount[reason] || 0) + 1;
-              });
-
-              let topNegativeReason = null;
-              let topNegativePercent = 0;
-
-              if (negativeReviews.length > 0) {
-                const sorted = Object.entries(negativeReasonCount).sort((a, b) => b[1] - a[1]);
-                topNegativeReason = sorted[0][0];
-                topNegativePercent = Math.round((sorted[0][1] / negativeReviews.length) * 100);
-              }
-
-              return (
-                <div key={product._id} className="border p-4 rounded-lg bg-gray-50 flex flex-col justify-between shadow-sm">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                       <p className="font-bold text-gray-800">{product.name}</p>
-                       <p className="text-sm font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded flex items-center gap-1 shadow-sm">
-                         ⭐ {avgRating}
-                       </p>
-                    </div>
-                    <div className="flex justify-between text-sm mb-3">
-                      <p className="text-gray-600">Total Reviews: <span className="font-bold text-gray-800">{totalReviews}</span></p>
-                      <p className="text-gray-600">Good: <span className="text-green-600 font-bold">{goodReviews}</span> | Bad: <span className="text-red-500 font-bold">{badReviews}</span></p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-2 text-sm bg-white p-3 rounded-lg border shadow-sm">
-                    {topPositiveReason ? (
-                      <p className="flex items-center gap-2 mb-2">
-                        <span className="text-green-700 font-bold bg-green-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          👍 {topPositivePercent}%
-                        </span> 
-                        <span className="text-gray-600">liked <span className="font-semibold text-gray-800">{topPositiveReason}</span></span>
-                      </p>
-                    ) : (
-                      <p className="flex items-center gap-2 text-gray-500 italic mb-2">No positive feedback available.</p>
-                    )}
-
-                    {topNegativeReason ? (
-                      <p className="flex items-center gap-2">
-                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          👎 {topNegativePercent}%
-                        </span> 
-                        <span className="text-gray-600">disliked <span className="font-semibold text-gray-800">{topNegativeReason}</span></span>
-                      </p>
-                    ) : (
-                      <p className="flex items-center gap-2 text-gray-500 italic">No significant negative complaints.</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Monthly Orders Chart */}
-        {analytics?.monthlyOrders && analytics.monthlyOrders.length > 0 && (
-          <div className="card p-6 mb-8">
-            <h3 className="text-xl font-bold mb-4">Monthly Orders</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analytics.monthlyOrders}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="count" stroke="#3B82F6" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Recent Orders */}
-        <div className="card p-6">
-          <h3 className="text-xl font-bold mb-4">Recent Orders</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="px-4 py-2 text-left font-semibold">Order ID</th>
-                  <th className="px-4 py-2 text-left font-semibold">Customer</th>
-                  <th className="px-4 py-2 text-left font-semibold">Specs</th>
-                  <th className="px-4 py-2 text-left font-semibold">Amount</th>
-                  <th className="px-4 py-2 text-left font-semibold">Status</th>
-                  <th className="px-4 py-2 text-left font-semibold">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.slice(0, 10).map((order) => (
-                  <tr key={order._id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 font-semibold">{order.orderId}</td>
-                    <td className="px-4 py-3">{order.userId?.name || 'Unknown'}</td>
-                    <td className="px-4 py-3 text-xs">
-                      {order.size} • {order.fabric} • {order.color}
-                    </td>
-                    <td className="px-4 py-3 font-bold text-green-600">₹{order.totalPrice}</td>
-                    <td className="px-4 py-3">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="card p-5">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">New This Month</p>
+          <p className="text-3xl font-bold text-emerald-600 mt-1">{insights?.newCustomersThisMonth || 0}</p>
         </div>
       </div>
+
+      {/* Abandoned Cart Alert */}
+      {abandonedCarts.length > 0 && (
+        <div className="card p-5 mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <p className="text-sm font-semibold text-amber-800">Cart Abandonment Alert</p>
+                <p className="text-xs text-amber-600">{abandonedCarts.length} users have items in cart but haven't ordered</p>
+              </div>
+            </div>
+            <button onClick={() => navigate('/admin/customers')} className="btn-primary !py-2 !px-4 text-xs !bg-amber-600 hover:!bg-amber-700">
+              View & Take Action →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Popular Sizes */}
+        <div className="card p-6">
+          <h3 className="font-bold text-primary mb-4">Demand by Size</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={sizesData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+              <Bar dataKey="value" fill="#6366F1" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Fabric Preference */}
+        <div className="card p-6">
+          <h3 className="font-bold text-primary mb-4">Fabric Preference</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={fabricsData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}`}
+                outerRadius={90}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {fabricsData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Fit Preference */}
+        <div className="card p-6">
+          <h3 className="font-bold text-primary mb-4">Fit Preference</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={fitsData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+              <Bar dataKey="value" fill="#EC4899" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Color Preference */}
+        <div className="card p-6">
+          <h3 className="font-bold text-primary mb-4">Color Preference</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={colorsData.slice(0, 5)}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}`}
+                outerRadius={90}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {colorsData.slice(0, 5).map((entry, index) => (
+                  <Cell key={`cell-color-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Products Table */}
+      <div className="card overflow-hidden mb-8">
+        <div className="p-5 border-b border-gray-100">
+          <h3 className="font-bold text-primary">Products Inventory</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                {['Name', 'Category', 'Price', 'Stock', 'Status', 'Action'].map(h => (
+                  <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => {
+                const lowStock = product.stock <= 5;
+                return (
+                  <tr key={product._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="px-5 py-4 font-medium text-primary">{product.name}</td>
+                    <td className="px-5 py-4 text-gray-500">{product.category}</td>
+                    <td className="px-5 py-4 font-semibold">₹{product.basePrice}</td>
+                    <td className="px-5 py-4">{product.stock}</td>
+                    <td className="px-5 py-4">
+                      <span className={`badge ${product.stock <= 0 ? 'badge-red' : lowStock ? 'badge-yellow' : 'badge-green'} text-[10px]`}>
+                        {product.stock <= 0 ? 'Out of Stock' : lowStock ? 'Low Stock' : 'In Stock'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <button
+                        className="text-sm text-secondary hover:underline font-medium"
+                        onClick={async () => {
+                          const newStock = parseInt(prompt('Enter new stock quantity', product.stock));
+                          if (isNaN(newStock) || newStock < 0) return;
+                          try {
+                            await productService.updateStock(product._id, newStock);
+                            const res = await productService.getProducts();
+                            setProducts(res.data);
+                            setToast({ message: 'Stock updated!', type: 'success' });
+                          } catch (err) {
+                            console.error(err);
+                            setToast({ message: 'Failed to update stock', type: 'error' });
+                          }
+                        }}
+                      >
+                        Edit Stock
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Review Insights */}
+      <div className="card overflow-hidden mb-8">
+        <div className="p-5 border-b border-gray-100">
+          <h3 className="font-bold text-primary">Review Insights (CRM)</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Product sentiment analysis</p>
+        </div>
+        <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {products.slice(0, 4).map((product) => {
+            const mockReviews = product.reviewsData?.length > 0 ? product.reviewsData : getReviewsForProduct(product._id);
+            const totalReviews = mockReviews.length;
+            const avgRating = totalReviews > 0 ? (mockReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1) : 0;
+            const goodReviews = mockReviews.filter(r => r.rating >= 4).length;
+            const badReviews = mockReviews.filter(r => r.rating <= 2).length;
+            
+            const positiveReviews = mockReviews.filter(r => r.rating >= 4);
+            const positiveReasonCount = {};
+            positiveReviews.forEach(r => {
+              const reason = r.reason || r.reasonTag || "General";
+              positiveReasonCount[reason] = (positiveReasonCount[reason] || 0) + 1;
+            });
+
+            let topPositiveReason = null;
+            let topPositivePercent = 0;
+            if (positiveReviews.length > 0) {
+              const sorted = Object.entries(positiveReasonCount).sort((a, b) => b[1] - a[1]);
+              topPositiveReason = sorted[0][0];
+              topPositivePercent = Math.round((sorted[0][1] / positiveReviews.length) * 100);
+            }
+
+            const negativeReviews = mockReviews.filter(r => r.rating <= 2);
+            const negativeReasonCount = {};
+            negativeReviews.forEach(r => {
+              const reason = r.reason || r.reasonTag || "General";
+              negativeReasonCount[reason] = (negativeReasonCount[reason] || 0) + 1;
+            });
+
+            let topNegativeReason = null;
+            let topNegativePercent = 0;
+            if (negativeReviews.length > 0) {
+              const sorted = Object.entries(negativeReasonCount).sort((a, b) => b[1] - a[1]);
+              topNegativeReason = sorted[0][0];
+              topNegativePercent = Math.round((sorted[0][1] / negativeReviews.length) * 100);
+            }
+
+            return (
+              <div key={product._id} className="p-4 bg-gray-50 rounded-xl">
+                <div className="flex justify-between items-start mb-3">
+                  <p className="font-semibold text-primary text-sm">{product.name}</p>
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                    <span className="text-sm font-bold text-primary">{avgRating}</span>
+                  </div>
+                </div>
+                <div className="flex gap-4 text-xs mb-3">
+                  <span className="text-gray-500">Reviews: <span className="font-bold text-primary">{totalReviews}</span></span>
+                  <span className="text-emerald-600 font-medium">👍 {goodReviews}</span>
+                  <span className="text-red-500 font-medium">👎 {badReviews}</span>
+                </div>
+                <div className="space-y-1.5">
+                  {topPositiveReason && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="badge badge-green text-[10px]">👍 {topPositivePercent}%</span>
+                      <span className="text-gray-600">liked <span className="font-medium text-primary">{topPositiveReason}</span></span>
+                    </div>
+                  )}
+                  {topNegativeReason && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="badge badge-red text-[10px]">👎 {topNegativePercent}%</span>
+                      <span className="text-gray-600">disliked <span className="font-medium text-primary">{topNegativeReason}</span></span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Monthly Orders */}
+      {analytics?.monthlyOrders && analytics.monthlyOrders.length > 0 && (
+        <div className="card p-6 mb-8">
+          <h3 className="font-bold text-primary mb-4">Monthly Orders Trend</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={analytics.monthlyOrders}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+              <Line type="monotone" dataKey="count" stroke="#6366F1" strokeWidth={2} dot={{ fill: '#6366F1', r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Recent Orders */}
+      <div className="card overflow-hidden">
+        <div className="p-5 border-b border-gray-100">
+          <h3 className="font-bold text-primary">Recent Orders</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                {['Order ID', 'Customer', 'Specs', 'Amount', 'Status', 'Date'].map(h => (
+                  <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {orders.slice(0, 10).map((order) => (
+                <tr key={order._id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  <td className="px-5 py-4 font-semibold text-primary">{order.orderId}</td>
+                  <td className="px-5 py-4 text-gray-600">{order.userId?.name || 'Unknown'}</td>
+                  <td className="px-5 py-4 text-xs text-gray-500">{order.size} • {order.fabric} • {order.color}</td>
+                  <td className="px-5 py-4 font-bold text-emerald-600">₹{order.totalPrice}</td>
+                  <td className="px-5 py-4">
+                    <span className="badge badge-yellow text-[10px]">{order.status}</span>
+                  </td>
+                  <td className="px-5 py-4 text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };

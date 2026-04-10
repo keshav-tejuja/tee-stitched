@@ -1,9 +1,16 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('stitched_cart')) || [];
+    } catch {
+      return [];
+    }
+  });
+  
   const [wishlist, setWishlist] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('wishlist')) || [];
@@ -11,6 +18,7 @@ export const CartProvider = ({ children }) => {
       return [];
     }
   });
+  
   const [checkout, setCheckout] = useState({
     shippingAddress: {
       street: '',
@@ -20,6 +28,11 @@ export const CartProvider = ({ children }) => {
       country: '',
     },
   });
+
+  // Persist cart to localStorage
+  useEffect(() => {
+    localStorage.setItem('stitched_cart', JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = (design, quantity = 1) => {
     setCart([...cart, { ...design, quantity, id: Date.now() }]);
@@ -42,7 +55,7 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 

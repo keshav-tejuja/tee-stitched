@@ -17,10 +17,7 @@ const Register = () => {
   const { login } = useContext(AuthContext);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -51,83 +48,96 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="card w-full max-w-md p-8">
-        <h1 className="text-3xl font-bold text-center mb-6 text-primary">Register</h1>
-        
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-            {error}
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4">
+      <div className="w-full max-w-md animate-fade-in">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-lg">S</span>
           </div>
-        )}
+          <h1 className="text-2xl font-bold text-primary">Join STITCHED</h1>
+          <p className="text-sm text-gray-500 mt-1">Create your account and start designing</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="input-field"
-              required
-            />
-          </div>
+        <div className="card p-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200">
+              {error}
+            </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="input-field"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="Your name"
+                required
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="input-field"
-              required
-            />
-          </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="input-field"
-              required
-            />
-          </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Password</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="••••••••"
+                required
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full disabled:opacity-50"
-          >
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Confirm Password</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="••••••••"
+                required
+              />
+            </div>
 
-        <p className="text-center mt-4">
-          Already have an account?{' '}
-          <button
-            onClick={() => navigate('/login')}
-            className="text-secondary hover:underline font-semibold"
-          >
-            Login
-          </button>
-        </p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full !py-3 disabled:opacity-50"
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
+
+          <p className="text-center mt-6 text-sm text-gray-500">
+            Already have an account?{' '}
+            <button
+              onClick={() => navigate('/login')}
+              className="text-secondary hover:underline font-semibold"
+            >
+              Sign in
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
